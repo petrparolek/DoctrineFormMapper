@@ -50,7 +50,14 @@ class Column implements IComponentMapper
 
         $name = $component->getName() ?: '';
 
-        if ($meta->hasField($name)) {
+        $methods = get_class_methods($entity);
+        $getters = array_filter($methods, function ($method) {
+            return strpos($method, 'get') !== false;
+        });
+
+        $getter = 'get' . ucwords($name);
+
+        if (in_array($getter, $getters)) {
             try {
                 $value = $this->accessor->getValue($entity, $name);
                 $component->setDefaultValue($value);
@@ -74,7 +81,14 @@ class Column implements IComponentMapper
 
         $name = $component->getName() ?: '';
 
-        if ($meta->hasField($name) && $this->accessor->isWritable($entity, $name)) {
+        $methods = get_class_methods($entity);
+        $allSetters = array_filter($methods, function ($method) {
+            return strpos($method, 'set') !== false;
+        });
+
+        $setter = 'set' . ucwords($name);
+
+        if (in_array($setter, $allSetters) && $this->accessor->isWritable($entity, $name)) {
             try {
                 $this->accessor->setValue($entity, $name, $component->getValue());
             } catch (LogicException $e) {
